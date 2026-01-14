@@ -180,6 +180,12 @@ def basic_arg_parser() -> argparse.ArgumentParser:
         "Note that calculations are still performed in bfloat16 precision.",
     )
     parser.add_argument("--enhance-prompt", action="store_true")
+    parser.add_argument(
+        "--no-audio",
+        action="store_true",
+        help="Disable audio generation and save video without audio track. "
+        "Note: Audio latents are still generated internally (joint model), but audio decoding and encoding are skipped.",
+    )
     return parser
 
 

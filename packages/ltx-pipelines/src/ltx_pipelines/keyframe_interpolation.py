@@ -265,8 +265,8 @@ def main() -> None:
     encode_video(
         video=video,
         fps=args.frame_rate,
-        audio=audio,
-        audio_sample_rate=AUDIO_SAMPLE_RATE,
+        audio=None if args.no_audio else audio,
+        audio_sample_rate=None if args.no_audio else AUDIO_SAMPLE_RATE,
         output_path=args.output_path,
         video_chunks_number=video_chunks_number,
     )
