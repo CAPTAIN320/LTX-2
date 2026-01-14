@@ -29,6 +29,7 @@ from ltx_pipelines.utils.helpers import (
     get_device,
     image_conditionings_by_replacing_latent,
     simple_denoising_func,
+    synchronize_device,
 )
 from ltx_pipelines.utils.media_io import encode_video
 from ltx_pipelines.utils.types import PipelineComponents
@@ -95,9 +96,9 @@ class DistilledPipeline:
         context_p = encode_text(text_encoder, prompts=[prompt])[0]
         video_context, audio_context = context_p
 
-        torch.cuda.synchronize()
+        synchronize_device(self.device)
         del text_encoder
-        cleanup_memory()
+        cleanup_memory(self.device)
 
         # Stage 1: Initial low resolution video generation.
         video_encoder = self.model_ledger.video_encoder()
@@ -152,8 +153,8 @@ class DistilledPipeline:
             latent=video_state.latent[:1], video_encoder=video_encoder, upsampler=self.model_ledger.spatial_upsampler()
         )
 
-        torch.cuda.synchronize()
-        cleanup_memory()
+        synchronize_device(self.device)
+        cleanup_memory(self.device)
 
         stage_2_sigmas = torch.Tensor(STAGE_2_DISTILLED_SIGMA_VALUES).to(self.device)
         stage_2_output_shape = VideoPixelShape(batch=1, frames=num_frames, width=width, height=height, fps=frame_rate)
@@ -180,10 +181,10 @@ class DistilledPipeline:
             initial_audio_latent=audio_state.latent,
         )
 
-        torch.cuda.synchronize()
+        synchronize_device(self.device)
         del transformer
         del video_encoder
-        cleanup_memory()
+        cleanup_memory(self.device)
 
         decoded_video = vae_decode_video(
             video_state.latent, self.model_ledger.video_decoder(), tiling_config, generator

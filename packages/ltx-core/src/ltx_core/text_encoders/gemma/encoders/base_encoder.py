@@ -232,7 +232,10 @@ def _find_matching_dir(root_path: str, pattern: str) -> str:
 
 def module_ops_from_gemma_root(gemma_root: str) -> tuple[ModuleOps, ...]:
     gemma_path = _find_matching_dir(gemma_root, "model*.safetensors")
-    tokenizer_path = _find_matching_dir(gemma_root, "tokenizer.model")
+    try:
+        tokenizer_path = _find_matching_dir(gemma_root, "tokenizer.model")
+    except FileNotFoundError:
+        tokenizer_path = _find_matching_dir(gemma_root, "tokenizer.json")
     processor_path = _find_matching_dir(gemma_root, "preprocessor_config.json")
 
     def load_gemma(module: GemmaTextEncoderModelBase) -> GemmaTextEncoderModelBase:

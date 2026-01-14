@@ -25,6 +25,7 @@ from ltx_pipelines.utils.helpers import (
     get_device,
     guider_denoising_func,
     image_conditionings_by_replacing_latent,
+    synchronize_device,
 )
 from ltx_pipelines.utils.media_io import encode_video
 from ltx_pipelines.utils.types import PipelineComponents
@@ -94,9 +95,9 @@ class TI2VidOneStagePipeline:
         v_context_p, a_context_p = context_p
         v_context_n, a_context_n = context_n
 
-        torch.cuda.synchronize()
+        synchronize_device(self.device)
         del text_encoder
-        cleanup_memory()
+        cleanup_memory(self.device)
 
         # Stage 1: Initial low resolution video generation.
         video_encoder = self.model_ledger.video_encoder()

@@ -29,13 +29,34 @@ from ltx_pipelines.utils.types import (
 def get_device() -> torch.device:
     if torch.cuda.is_available():
         return torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        return torch.device("mps")
     return torch.device("cpu")
 
 
-def cleanup_memory() -> None:
+def synchronize_device(device: torch.device | None = None) -> None:
+    """Synchronize the specified device or the default device."""
+    if device is None:
+        device = get_device()
+
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    elif device.type == "mps":
+        torch.mps.synchronize()
+
+
+def cleanup_memory(device: torch.device | None = None) -> None:
+    """Clean up memory for the specified device."""
+    if device is None:
+        device = get_device()
+
     gc.collect()
-    torch.cuda.empty_cache()
-    torch.cuda.synchronize()
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+    elif device.type == "mps":
+        torch.mps.empty_cache()
+        torch.mps.synchronize()
 
 
 def image_conditionings_by_replacing_latent(

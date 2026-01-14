@@ -70,7 +70,13 @@ class SingleGPUModelBuilder(Generic[ModelType], ModelBuilderProtocol[ModelType],
         return retval
 
     def build(self, device: torch.device | None = None, dtype: torch.dtype | None = None) -> ModelType:
-        device = torch.device("cuda") if device is None else device
+        if device is None:
+            if torch.cuda.is_available():
+                device = torch.device("cuda")
+            elif torch.backends.mps.is_available():
+                device = torch.device("mps")
+            else:
+                device = torch.device("cpu")
         config = self.model_config()
         meta_model = self.meta_model(config, self.module_ops)
         model_paths = self.model_path if isinstance(self.model_path, tuple) else [self.model_path]

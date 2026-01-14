@@ -1,13 +1,23 @@
 import torch
-import triton
 
-from ltx_core.loader.kernels import fused_add_round_kernel
 from ltx_core.loader.primitives import LoraStateDictWithStrength, StateDict
+
+# Triton is CUDA-only, make it optional for MPS/CPU
+try:
+    import triton
+    from ltx_core.loader.kernels import fused_add_round_kernel
+    TRITON_AVAILABLE = True
+except ImportError:
+    TRITON_AVAILABLE = False
+    triton = None
+    fused_add_round_kernel = None
 
 BLOCK_SIZE = 1024
 
 
 def fused_add_round_launch(target_weight: torch.Tensor, original_weight: torch.Tensor, seed: int) -> torch.Tensor:
+    if not TRITON_AVAILABLE:
+        raise RuntimeError("Triton is not available. FP8 LoRA fusion requires CUDA and Triton.")
     if original_weight.dtype == torch.float8_e4m3fn:
         exponent_bits, mantissa_bits, exponent_bias = 4, 3, 7
     elif original_weight.dtype == torch.float8_e5m2:

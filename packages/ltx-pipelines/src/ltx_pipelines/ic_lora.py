@@ -30,6 +30,7 @@ from ltx_pipelines.utils.helpers import (
     get_device,
     image_conditionings_by_replacing_latent,
     simple_denoising_func,
+    synchronize_device,
 )
 from ltx_pipelines.utils.media_io import encode_video, load_video_conditioning
 from ltx_pipelines.utils.types import PipelineComponents
@@ -110,9 +111,9 @@ class ICLoraPipeline:
             )
         video_context, audio_context = encode_text(text_encoder, prompts=[prompt])[0]
 
-        torch.cuda.synchronize()
+        synchronize_device(self.device)
         del text_encoder
-        cleanup_memory()
+        cleanup_memory(self.device)
 
         # Stage 1: Initial low resolution video generation.
         video_encoder = self.stage_1_model_ledger.video_encoder()
@@ -161,9 +162,9 @@ class ICLoraPipeline:
             device=self.device,
         )
 
-        torch.cuda.synchronize()
+        synchronize_device(self.device)
         del transformer
-        cleanup_memory()
+        cleanup_memory(self.device)
 
         # Stage 2: Upsample and refine the video at higher resolution with distilled LORA.
         upscaled_video_latent = upsample_video(
@@ -172,8 +173,8 @@ class ICLoraPipeline:
             upsampler=self.stage_2_model_ledger.spatial_upsampler(),
         )
 
-        torch.cuda.synchronize()
-        cleanup_memory()
+        synchronize_device(self.device)
+        cleanup_memory(self.device)
 
         transformer = self.stage_2_model_ledger.transformer()
         distilled_sigmas = torch.Tensor(STAGE_2_DISTILLED_SIGMA_VALUES).to(self.device)
@@ -218,10 +219,10 @@ class ICLoraPipeline:
             initial_audio_latent=audio_state.latent,
         )
 
-        torch.cuda.synchronize()
+        synchronize_device(self.device)
         del transformer
         del video_encoder
-        cleanup_memory()
+        cleanup_memory(self.device)
 
         decoded_video = vae_decode_video(
             video_state.latent, self.stage_2_model_ledger.video_decoder(), tiling_config, generator
