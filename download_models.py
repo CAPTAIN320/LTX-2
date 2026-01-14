@@ -22,17 +22,25 @@ def download_ltx2_models():
 
     # 1. Choose Model Version
     print("\nChoose LTX-2 Model Version:")
-    print("1) BF16 (Recommended for Apple Silicon/MPS) - ~40GB")
-    print("2) FP8 (Smaller, but requires Triton/CUDA for LoRA) - ~20GB")
+    print("1) BF16 Dev (Recommended for Apple Silicon/MPS) - ~40GB")
+    print("2) FP8 Dev (Smaller, but requires Triton/CUDA for LoRA) - ~20GB")
+    print("3) BF16 Distilled (Alternative checkpoint) - ~40GB")
+    print("4) FP8 Distilled (Alternative checkpoint) - ~20GB")
 
-    choice = input("Enter choice [1-2] (default: 1): ").strip()
+    choice = input("Enter choice [1-4] (default: 1): ").strip()
 
     if choice == "2":
         filename = "ltx-2-19b-dev-fp8.safetensors"
-        print(f"\nSelected: FP8 Model ({filename})")
+        print(f"\nSelected: FP8 Dev Model ({filename})")
+    elif choice == "3":
+        filename = "ltx-2-19b-distilled.safetensors"
+        print(f"\nSelected: BF16 Distilled Model ({filename})")
+    elif choice == "4":
+        filename = "ltx-2-19b-distilled-fp8.safetensors"
+        print(f"\nSelected: FP8 Distilled Model ({filename})")
     else:
         filename = "ltx-2-19b-dev.safetensors"
-        print(f"\nSelected: BF16 Model ({filename})")
+        print(f"\nSelected: BF16 Dev Model ({filename})")
 
     print(f"\nDownloading {filename}...")
     try:
