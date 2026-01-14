@@ -171,25 +171,27 @@ print(f"Output will be saved to: {OUTPUT_PATH}")
 print()
 
 try:
-    video, audio = pipeline(**TEST_PARAMS)
-
-    # Save output
-    from ltx_pipelines.utils.constants import AUDIO_SAMPLE_RATE
-    from ltx_pipelines.utils.media_io import encode_video
-    from ltx_core.model.video_vae import TilingConfig, get_video_chunks_number
-
-    tiling_config = TilingConfig.default()
-    video_chunks_number = get_video_chunks_number(TEST_PARAMS["num_frames"], tiling_config)
-
-    encode_video(
-        video=video,
-        fps=TEST_PARAMS["frame_rate"],
-        audio=audio,
-        audio_sample_rate=AUDIO_SAMPLE_RATE,
-        output_path=str(OUTPUT_PATH),
-        video_chunks_number=video_chunks_number,
-    )
-
+    # Wrap generation and encoding in inference_mode to avoid autograd errors with generators
+    with torch.inference_mode():
+        video, audio = pipeline(**TEST_PARAMS)
+        
+        # Save output
+        from ltx_pipelines.utils.constants import AUDIO_SAMPLE_RATE
+        from ltx_pipelines.utils.media_io import encode_video
+        from ltx_core.model.video_vae import TilingConfig, get_video_chunks_number
+        
+        tiling_config = TilingConfig.default()
+        video_chunks_number = get_video_chunks_number(TEST_PARAMS["num_frames"], tiling_config)
+        
+        encode_video(
+            video=video,
+            fps=TEST_PARAMS["frame_rate"],
+            audio=audio,
+            audio_sample_rate=AUDIO_SAMPLE_RATE,
+            output_path=str(OUTPUT_PATH),
+            video_chunks_number=video_chunks_number,
+        )
+    
     print()
     print("=" * 60)
     print("✓ SUCCESS! Test completed successfully!")
